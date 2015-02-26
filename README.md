@@ -13,7 +13,7 @@ Example:
 ```php
 $ob = HiWrapper::table("table_name");
 ```
-**или по названию сущности**
+**или по названию**
 ```php
 $ob = HiWrapper::code("EntityName");
 ```
