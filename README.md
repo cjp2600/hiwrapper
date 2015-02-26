@@ -13,6 +13,14 @@ Example:
 ```php
 $ob = HiWrapper::table("table_name");
 ```
+**или**
+```php
+$ob = HiWrapper::code("EntityName");
+```
+**или**
+```php
+$ob = HiWrapper::id(5);
+```
 
 **далее работаем с обычным orm bitrix**
 ```php
