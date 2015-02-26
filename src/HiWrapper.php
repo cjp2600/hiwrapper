@@ -64,7 +64,7 @@ class HiWrapper {
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Exception
      */
-    public function getList($param)
+    public function getList($param = array())
     {
         $obEntity = $this->getEntityDataClass();
         return $obEntity::getList($param);
