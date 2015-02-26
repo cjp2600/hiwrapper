@@ -1,6 +1,6 @@
 {
 	"name": "cjp2600/hiwrapper",
-	"description": "Bitrix Highloadblock Helper class ",
+	"description": "Bitrix Highloadblock Helper class",
 	"keywords": ["bitrix", "hlblock"],
 	"license": "MIT",
  	"authors": [
