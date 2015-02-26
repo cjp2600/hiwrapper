@@ -1,0 +1,22 @@
+{
+	"name": "cjp2600/hiwrapper",
+	"description": "Bitrix Highloadblock Helper class ",
+	"keywords": ["bitrix", "hlblock"],
+	"license": "MIT",
+ 	"authors": [
+	  {
+		  "name": "Stanislav Semenov",
+		  "email": "cjp2600@ya.ru"
+	  }
+	],
+	"autoload": {
+		"classmap": [
+		  	"src"
+		]
+	},
+	"config": {
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "dev"
+}
+
