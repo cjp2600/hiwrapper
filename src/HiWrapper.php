@@ -13,8 +13,6 @@ use Bitrix\Main\Loader;
 
 class HiWrapper {
 
-    # singleton object
-    private static $_instance = null;
     # highloadblock table name
     private $_table_name = null;
     # highloadblock table code
@@ -25,6 +23,8 @@ class HiWrapper {
     private $_default_cache = 86400;
     # hlblock data
     private $_hldata = null;
+    # hl list
+    private static $_hlblock_list = null;
 
 
     function __construct($config)
@@ -39,11 +39,6 @@ class HiWrapper {
         $this->_table_id   = (isset($config['table_id']) && !empty($config['table_id'])) ? $config['table_id'] : null;
     }
 
-    /**
-     * limit cloning object
-     * __clone
-     */
-    protected function __clone(){}
 
     /**
      * table
@@ -52,11 +47,7 @@ class HiWrapper {
      */
     public static function table($_table_name)
     {
-        if(is_null(self::$_instance))
-        {
-            self::$_instance = new self(array("table_name"=>$_table_name));
-        }
-        return self::$_instance;
+        return new self(array("table_name"=>$_table_name));
     }
 
     /**
@@ -66,11 +57,7 @@ class HiWrapper {
      */
     public static function code($_table_code)
     {
-        if(is_null(self::$_instance))
-        {
-            self::$_instance = new self(array("table_code"=>$_table_code));
-        }
-        return self::$_instance;
+        return new self(array("table_code"=>$_table_code));
     }
 
     /**
@@ -80,11 +67,7 @@ class HiWrapper {
      */
     public static function id($_table_id)
     {
-        if(is_null(self::$_instance))
-        {
-            self::$_instance = new self(array("table_id"=>$_table_id));
-        }
-        return self::$_instance;
+        return new self(array("table_id"=>$_table_id));
     }
 
     /**
@@ -145,23 +128,22 @@ class HiWrapper {
      */
     private function getEntityDataClass()
     {
-        if (is_null($this->getHldata())) {
 
-            if (!is_null($this->getTableName())) {
-                if (false === ($hlblock = $this->getHlBlockByTable())) {
-                    throw new \Exception('Not found HighloadBlock for table = "' . $this->getTableName() . '"');
-                }
-            } else if (!is_null($this->getTableCode())) {
-                if (false === ($hlblock = $this->getHlBlockByCode())) {
-                    throw new \Exception('Not found HighloadBlock for name = "' . $this->getTableCode() . '"');
-                }
-            } else if (!is_null($this->getTableId())){
-                if (false === ($hlblock = $this->getHlBlockById())) {
-                    throw new \Exception('Not found HighloadBlock for id = "' . $this->getTableId() . '"');
-                }
+        if (!is_null($this->getTableName())) {
+            if (false === ($hlblock = $this->getHlBlockByTable())) {
+                throw new \Exception('Not found HighloadBlock for table = "' . $this->getTableName() . '"');
             }
-            $this->setHldata($hlblock);
+        } else if (!is_null($this->getTableCode())) {
+            if (false === ($hlblock = $this->getHlBlockByCode())) {
+                throw new \Exception('Not found HighloadBlock for name = "' . $this->getTableCode() . '"');
+            }
+        } else if (!is_null($this->getTableId())){
+            if (false === ($hlblock = $this->getHlBlockById())) {
+                throw new \Exception('Not found HighloadBlock for id = "' . $this->getTableId() . '"');
+            }
         }
+        $this->setHldata($hlblock);
+
         $entity = HighloadBlockTable::compileEntity($this->getHldata());
         $entityDataClass = $entity->getDataClass();
         return $entityDataClass;
@@ -181,27 +163,63 @@ class HiWrapper {
             throw new \Exception('table name is empty.');
         }
         $hlblock = false;
-        $cache = new \CPHPCache();
-        $cache_time = $this->getDefaultCacheTime();
-        $cache_id = $tableName;
-        $cache_path = '/'.__CLASS__.'/'.__METHOD__.'/';
-        if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path))
-        {
-            $hlblock = $cache->GetVars();
-        } else {
-            $cache->StartDataCache($cache_time, $cache_id, $cache_path);
-
-            $hlBlockDbRes = HighloadBlockTable::getList(array('filter' => array('TABLE_NAME' => $tableName)));
-            if ($hlBlockDbRes !== false && $hlBlockDbRes->getSelectedRowsCount()) {
-                $hlblock = $hlBlockDbRes->fetch();
+        $arHLEnititesList = $this->getHlTablesList();
+        foreach($arHLEnititesList as $arItem) {
+            if(strtoupper($arItem['TABLE_NAME']) == strtoupper($tableName)) {
+                $hlblock = $arItem;
+                break;
             }
-            if (!$hlblock) {
-                $cache->AbortDataCache();
-            }
-            $cache->EndDataCache($hlblock);
         }
         return $hlblock;
     }
+
+    /**
+     * getHlTablesList
+     * @return bool|null
+     */
+    private function getHlTablesList()
+    {
+        if (is_null(self::$_hlblock_list)){
+            self::$_hlblock_list = $this->_getHlTablesList();
+        }
+        return self::$_hlblock_list;
+    }
+
+    /**
+     * _getHlTablesList
+     * @param bool $refresh_cache
+     * @return bool
+     * @throws \Bitrix\Main\ArgumentException
+     */
+    private function _getHlTablesList($refresh_cache = false)
+    {
+        $arReturn = false;
+        $cache = new \CPHPCache();
+        $cache_time = $this->getDefaultCacheTime();
+        $cache_id = 'getHlTablesList';
+        $cache_path = '/'.__CLASS__.'/'.__METHOD__.'/';
+        if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path)) {
+            $arReturn = $cache->GetVars();
+        } else {
+            $cache->StartDataCache($cache_time, $cache_id, $cache_path);
+
+            $dbItems = HighloadBlockTable::GetList(
+                array(
+                    'select' => array('ID', 'NAME', 'TABLE_NAME')
+                )
+            );
+            while($arItem = $dbItems->Fetch()) {
+                $arReturn[strtoupper($arItem['NAME'])] = $arItem;
+            }
+
+            if (!$arReturn) {
+                $cache->AbortDataCache();
+            }
+            $cache->EndDataCache($arReturn);
+        }
+        return $arReturn;
+    }
+
 
     /**
      * getHlBlockByCode
@@ -212,65 +230,36 @@ class HiWrapper {
      */
     private function getHlBlockByCode($refresh_cache = false)
     {
-        $tableCode = $this->getTableCode();
+        $tableCode = strtoupper(trim($this->getTableCode()));
         if (!$tableCode) {
             throw new \Exception('table code is empty.');
         }
         $hlblock = false;
-        $cache = new \CPHPCache();
-        $cache_time = $this->getDefaultCacheTime();
-        $cache_id = $tableCode;
-        $cache_path = '/'.__CLASS__.'/'.__METHOD__.'/';
-        if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path))
-        {
-            $hlblock = $cache->GetVars();
-        } else {
-            $cache->StartDataCache($cache_time, $cache_id, $cache_path);
-
-            $hlBlockDbRes = HighloadBlockTable::getList(array('filter' => array('NAME' => $tableCode)));
-            if ($hlBlockDbRes !== false && $hlBlockDbRes->getSelectedRowsCount()) {
-                $hlblock = $hlBlockDbRes->fetch();
-            }
-            if (!$hlblock) {
-                $cache->AbortDataCache();
-            }
-            $cache->EndDataCache($hlblock);
+        $arHLEnititesList = $this->getHlTablesList();
+        if(isset($arHLEnititesList[$tableCode])) {
+            $hlblock = $arHLEnititesList[$tableCode];
         }
         return $hlblock;
     }
 
     /**
      * getHlBlockById
-     * @param bool $refresh_cache
-     * @return array|bool|false
+     * @return bool
      * @throws Exception
-     * @throws \Bitrix\Main\ArgumentException
      */
-    private function getHlBlockById($refresh_cache = false)
+    private function getHlBlockById()
     {
         $tableId = $this->getTableId();
         if (!$tableId) {
-            throw new \Exception('table code is empty.');
+            throw new \Exception('table id is empty.');
         }
         $hlblock = false;
-        $cache = new \CPHPCache();
-        $cache_time = $this->getDefaultCacheTime();
-        $cache_id = $tableId;
-        $cache_path = '/'.__CLASS__.'/'.__METHOD__.'/';
-        if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path))
-        {
-            $hlblock = $cache->GetVars();
-        } else {
-            $cache->StartDataCache($cache_time, $cache_id, $cache_path);
-
-            $hlBlockDbRes = HighloadBlockTable::getList(array('filter' => array('ID' => $tableId)));
-            if ($hlBlockDbRes !== false && $hlBlockDbRes->getSelectedRowsCount()) {
-                $hlblock = $hlBlockDbRes->fetch();
+        $arHLEnititesList = $this->getHlTablesList();
+        foreach($arHLEnititesList as $arItem) {
+            if($arItem['ID'] == $tableId) {
+                $hlblock = $arItem;
+                break;
             }
-            if (!$hlblock) {
-                $cache->AbortDataCache();
-            }
-            $cache->EndDataCache($hlblock);
         }
         return $hlblock;
     }
