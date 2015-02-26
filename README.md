@@ -5,7 +5,6 @@ Composer:
 
 ```
 require: "cjp2600/hiwrapper": ">=1.0.0"
-
 ```
 
 Example:
