@@ -127,7 +127,8 @@ class HiWrapper {
      */
     public function getEntity()
     {
-        return $this->getEntityDataClass();
+        $obEntity = $this->getEntityDataClass();
+        return $obEntity::getEntity();
     }
 
     /**
