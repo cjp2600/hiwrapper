@@ -121,6 +121,16 @@ class HiWrapper {
     }
 
     /**
+     * getEntity
+     * @return \Bitrix\Main\Entity\DataManager
+     * @throws Exception
+     */
+    public function getEntity()
+    {
+        return $this->getEntityDataClass();
+    }
+
+    /**
      * getEntityDataClass
      * @return \Bitrix\Main\Entity\DataManager
      * @throws \Bitrix\Main\SystemException
@@ -128,7 +138,6 @@ class HiWrapper {
      */
     private function getEntityDataClass()
     {
-
         if (!is_null($this->getTableName())) {
             if (false === ($hlblock = $this->getHlBlockByTable())) {
                 throw new \Exception('Not found HighloadBlock for table = "' . $this->getTableName() . '"');
@@ -211,12 +220,11 @@ class HiWrapper {
 
     /**
      * getHlBlockByCode
-     * @param bool $refresh_cache
      * @return array|bool|false
      * @throws Exception
-     * @throws \Bitrix\Main\ArgumentException
+     * @internal param bool $refresh_cache
      */
-    private function getHlBlockByCode($refresh_cache = false)
+    private function getHlBlockByCode()
     {
         $tableCode = strtoupper(trim($this->getTableCode()));
         if (!$tableCode) {
