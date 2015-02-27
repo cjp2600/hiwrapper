@@ -11,32 +11,63 @@
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Loader;
 
-class HiWrapper {
+/**
+ * Class HiWrapper
+ */
+class HiWrapper
+{
 
     # highloadblock table name
+    /**
+     * @var null
+     */
     private $_table_name = null;
     # highloadblock table code
+    /**
+     * @var null
+     */
     private $_table_code = null;
     # highloadblock table id
+    /**
+     * @var null
+     */
     private $_table_id = null;
     # default cache time
+    /**
+     * @var int
+     */
     private $_default_cache = 86400;
     # hlblock data
+    /**
+     * @var null
+     */
     private $_hldata = null;
     # hl list
+    /**
+     * @var null
+     */
     private static $_hlblock_list = null;
 
 
+    /**
+     * @param $config
+     * @throws Exception
+     * @throws \Bitrix\Main\LoaderException
+     */
     function __construct($config)
     {
         # load highloadblock module
         if (!Loader::includeModule('highloadblock')) {
             throw new \Exception("highloadblock module not exists");
         }
+        # load iblock module
+        if (!Loader::IncludeModule("iblock")) {
+            throw new \Exception("iblock module not exists");
+        }
         # set highloadblock code
         $this->_table_name = (isset($config['table_name']) && !empty($config['table_name'])) ? $config['table_name'] : null;
         $this->_table_code = (isset($config['table_code']) && !empty($config['table_code'])) ? $config['table_code'] : null;
-        $this->_table_id   = (isset($config['table_id']) && !empty($config['table_id'])) ? $config['table_id'] : null;
+        $this->_table_id = (isset($config['table_id']) && !empty($config['table_id'])) ? $config['table_id'] : null;
     }
 
 
@@ -47,7 +78,7 @@ class HiWrapper {
      */
     public static function table($_table_name)
     {
-        return new self(array("table_name"=>$_table_name));
+        return new self(array("table_name" => $_table_name));
     }
 
     /**
@@ -57,7 +88,7 @@ class HiWrapper {
      */
     public static function code($_table_code)
     {
-        return new self(array("table_code"=>$_table_code));
+        return new self(array("table_code" => $_table_code));
     }
 
     /**
@@ -67,7 +98,7 @@ class HiWrapper {
      */
     public static function id($_table_id)
     {
-        return new self(array("table_id"=>$_table_id));
+        return new self(array("table_id" => $_table_id));
     }
 
     /**
@@ -132,6 +163,25 @@ class HiWrapper {
     }
 
     /**
+     * getDataType
+     * @return \Bitrix\Main\Entity\DataManager
+     * @throws Exception
+     */
+    public function getDataType()
+    {
+        return $this->getEntityDataClass();
+    }
+
+    /**
+     * query
+     * @return \Bitrix\Main\Entity\Query
+     */
+    public function query()
+    {
+        return new \Bitrix\Main\Entity\Query($this->getEntity());
+    }
+
+    /**
      * getEntityDataClass
      * @return \Bitrix\Main\Entity\DataManager
      * @throws \Bitrix\Main\SystemException
@@ -147,7 +197,7 @@ class HiWrapper {
             if (false === ($hlblock = $this->getHlBlockByCode())) {
                 throw new \Exception('Not found HighloadBlock for name = "' . $this->getTableCode() . '"');
             }
-        } else if (!is_null($this->getTableId())){
+        } else if (!is_null($this->getTableId())) {
             if (false === ($hlblock = $this->getHlBlockById())) {
                 throw new \Exception('Not found HighloadBlock for id = "' . $this->getTableId() . '"');
             }
@@ -173,8 +223,8 @@ class HiWrapper {
         }
         $hlblock = false;
         $arHLEnititesList = $this->getHlTablesList();
-        foreach($arHLEnititesList as $arItem) {
-            if(strtoupper($arItem['TABLE_NAME']) == strtoupper($tableName)) {
+        foreach ($arHLEnititesList as $arItem) {
+            if (strtoupper($arItem['TABLE_NAME']) == strtoupper($tableName)) {
                 $hlblock = $arItem;
                 break;
             }
@@ -233,7 +283,7 @@ class HiWrapper {
         }
         $hlblock = false;
         $arHLEnititesList = $this->getHlTablesList();
-        if(isset($arHLEnititesList[$tableCode])) {
+        if (isset($arHLEnititesList[$tableCode])) {
             $hlblock = $arHLEnititesList[$tableCode];
         }
         return $hlblock;
@@ -252,8 +302,8 @@ class HiWrapper {
         }
         $hlblock = false;
         $arHLEnititesList = $this->getHlTablesList();
-        foreach($arHLEnititesList as $arItem) {
-            if($arItem['ID'] == $tableId) {
+        foreach ($arHLEnititesList as $arItem) {
+            if ($arItem['ID'] == $tableId) {
                 $hlblock = $arItem;
                 break;
             }
