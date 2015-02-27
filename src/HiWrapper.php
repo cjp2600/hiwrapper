@@ -151,12 +151,11 @@ class HiWrapper {
 
     /**
      * getHlBlockByTable
-     * @param bool $refresh_cache
      * @return array|bool|false
      * @throws Exception
-     * @throws \Bitrix\Main\ArgumentException
+     * @internal param bool $refresh_cache
      */
-    private function getHlBlockByTable($refresh_cache = false)
+    private function getHlBlockByTable()
     {
         $tableName = $this->getTableName();
         if (!$tableName) {
@@ -174,50 +173,39 @@ class HiWrapper {
     }
 
     /**
-     * getHlTablesList
-     * @return bool|null
-     */
-    private function getHlTablesList()
-    {
-        if (is_null(self::$_hlblock_list)){
-            self::$_hlblock_list = $this->_getHlTablesList();
-        }
-        return self::$_hlblock_list;
-    }
-
-    /**
      * _getHlTablesList
      * @param bool $refresh_cache
      * @return bool
      * @throws \Bitrix\Main\ArgumentException
      */
-    private function _getHlTablesList($refresh_cache = false)
+    private function getHlTablesList($refresh_cache = false)
     {
-        $arReturn = false;
-        $cache = new \CPHPCache();
-        $cache_time = $this->getDefaultCacheTime();
-        $cache_id = 'getHlTablesList';
-        $cache_path = '/'.__CLASS__.'/'.__METHOD__.'/';
-        if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path)) {
-            $arReturn = $cache->GetVars();
-        } else {
-            $cache->StartDataCache($cache_time, $cache_id, $cache_path);
+        if (is_null(self::$_hlblock_list)) {
+            $cache = new \CPHPCache();
+            $cache_time = $this->getDefaultCacheTime();
+            $cache_id = 'getHlTablesList';
+            $cache_path = '/' . __CLASS__ . '/' . __METHOD__ . '/';
+            if ((!$refresh_cache) && $cache->InitCache($cache_time, $cache_id, $cache_path)) {
+                self::$_hlblock_list = $cache->GetVars();
+            } else {
+                $cache->StartDataCache($cache_time, $cache_id, $cache_path);
 
-            $dbItems = HighloadBlockTable::GetList(
-                array(
-                    'select' => array('ID', 'NAME', 'TABLE_NAME')
-                )
-            );
-            while($arItem = $dbItems->Fetch()) {
-                $arReturn[strtoupper($arItem['NAME'])] = $arItem;
-            }
+                $dbItems = HighloadBlockTable::GetList(
+                    array(
+                        'select' => array('ID', 'NAME', 'TABLE_NAME')
+                    )
+                );
+                while ($arItem = $dbItems->Fetch()) {
+                    self::$_hlblock_list[strtoupper($arItem['NAME'])] = $arItem;
+                }
 
-            if (!$arReturn) {
-                $cache->AbortDataCache();
+                if (is_null(self::$_hlblock_list)) {
+                    $cache->AbortDataCache();
+                }
+                $cache->EndDataCache(self::$_hlblock_list);
             }
-            $cache->EndDataCache($arReturn);
         }
-        return $arReturn;
+        return self::$_hlblock_list;
     }
 
 
