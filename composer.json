@@ -13,10 +13,7 @@
 		"classmap": [
 		  	"src"
 		]
-	},
-    "require": {
-      "cjp2600/hivarcache": ">=1.0.0"
-    },
+	}
 	"config": {
 		"preferred-install": "dist"
 	},

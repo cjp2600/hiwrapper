@@ -240,7 +240,7 @@ class HiWrapper
      */
     private function getHlTablesList($refresh_cache = false)
     {
-        if (!$hlblock_list = HiVarCache::get("getHlTablesList")) {
+        if (is_null(self::$_hlblock_list)) {
             $cache = new \CPHPCache();
             $cache_time = $this->getDefaultCacheTime();
             $cache_id = 'getHlTablesList';
@@ -256,17 +256,16 @@ class HiWrapper
                     )
                 );
                 while ($arItem = $dbItems->Fetch()) {
-                    $hlblock_list[strtoupper($arItem['NAME'])] = $arItem;
+                    self::$_hlblock_list[strtoupper($arItem['NAME'])] = $arItem;
                 }
 
-                if (!$hlblock_list) {
+                if (is_null(self::$_hlblock_list)) {
                     $cache->AbortDataCache();
                 }
-                HiVarCache::set("getHlTablesList",$hlblock_list);
-                $cache->EndDataCache($hlblock_list);
+                $cache->EndDataCache(self::$_hlblock_list);
             }
         }
-        return $hlblock_list;
+        return self::$_hlblock_list;
     }
 
 
