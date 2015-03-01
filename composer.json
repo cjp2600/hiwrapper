@@ -13,7 +13,7 @@
 		"classmap": [
 		  	"src"
 		]
-	}
+	},
 	"config": {
 		"preferred-install": "dist"
 	},
